@@ -4,9 +4,9 @@ using System.Net.Sockets;
 
 namespace ProtobufSockets.Internal
 {
-    class PublisherSubscriptionStore
+    internal class PublisherSubscriptionStore
     {
-        readonly ConcurrentDictionary<Socket, PublisherClient> _cs = new ConcurrentDictionary<Socket, PublisherClient>();
+        private readonly ConcurrentDictionary<Socket, PublisherClient> _cs = new ConcurrentDictionary<Socket, PublisherClient>();
 
         internal IEnumerable<PublisherClient> Subscriptions
         {

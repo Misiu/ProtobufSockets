@@ -11,10 +11,10 @@
             long messageCount,
             long beatCount)
         {
-			Name = name;
-			MessageLoss = messageLoss;
-			Backlog = backlog;
-			EndPoint = endPoint;
+            Name = name;
+            MessageLoss = messageLoss;
+            Backlog = backlog;
+            EndPoint = endPoint;
             Topic = topic;
             Type = type;
             MessageCount = messageCount;

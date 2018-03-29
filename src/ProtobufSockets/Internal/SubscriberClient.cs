@@ -6,21 +6,21 @@ using System.IO;
 
 namespace ProtobufSockets.Internal
 {
-    class SubscriberClient
+    internal class SubscriberClient
     {
-        const LogTag Tag = LogTag.SubscriberClient;
+        private const LogTag Tag = LogTag.SubscriberClient;
 
-        long _messageCount;
-        int _disposed;
+        private long _messageCount;
+        private int _disposed;
 
-        readonly IPEndPoint _endPoint;
-        readonly TcpClient _tcpClient;
-        readonly Thread _consumerThread;
-        readonly NetworkStream _networkStream;
-        readonly Type _type;
-        readonly ProtoSerialiser _serialiser;
-        readonly Action<object> _action;
-        readonly Action<IPEndPoint> _disconnected;
+        private readonly IPEndPoint _endPoint;
+        private readonly TcpClient _tcpClient;
+        private readonly Thread _consumerThread;
+        private readonly NetworkStream _networkStream;
+        private readonly Type _type;
+        private readonly ProtoSerialiser _serialiser;
+        private readonly Action<object> _action;
+        private readonly Action<IPEndPoint> _disconnected;
         private long _beat;
 
         internal static SubscriberClient Connect(IPEndPoint endPoint, string name, string topic, Type type, Action<object> action, Action<IPEndPoint> disconnected)
@@ -68,7 +68,7 @@ namespace ProtobufSockets.Internal
             return null;
         }
 
-        SubscriberClient(IPEndPoint endPoint, Type type, Action<object> action, Action<IPEndPoint> disconnected, TcpClient tcpClient, NetworkStream networkStream, ProtoSerialiser serialiser)
+        private SubscriberClient(IPEndPoint endPoint, Type type, Action<object> action, Action<IPEndPoint> disconnected, TcpClient tcpClient, NetworkStream networkStream, ProtoSerialiser serialiser)
         {
             _endPoint = endPoint;
             _type = type;
@@ -78,7 +78,7 @@ namespace ProtobufSockets.Internal
             _networkStream = networkStream;
             _serialiser = serialiser;
 
-            _consumerThread = new Thread(Consume) { IsBackground = true };
+            _consumerThread = new Thread(Consume) {IsBackground = true};
             _consumerThread.Start();
         }
 
@@ -101,7 +101,7 @@ namespace ProtobufSockets.Internal
             _disconnected(_endPoint);
         }
 
-        void Consume()
+        private void Consume()
         {
             Log.Info(Tag, "Consumer started [" + Thread.CurrentThread.ManagedThreadId + "]");
 
@@ -162,4 +162,3 @@ namespace ProtobufSockets.Internal
         }
     }
 }
-

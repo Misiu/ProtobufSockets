@@ -2,7 +2,7 @@ using System;
 
 namespace ProtobufSockets.Internal
 {
-    class ProtoSerialiserException : Exception
+    internal class ProtoSerialiserException : Exception
     {
         public ProtoSerialiserException()
         {

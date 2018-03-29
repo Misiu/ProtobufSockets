@@ -2,7 +2,7 @@
 
 namespace ProtobufSockets.Internal
 {
-    class ObjectWrap
+    internal class ObjectWrap
     {
         internal Type Type;
         internal object Object;

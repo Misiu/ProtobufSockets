@@ -6,60 +6,91 @@ using System.Threading;
 
 namespace ProtobufSockets.Internal
 {
-    class PublisherClient
+    internal class PublisherClient
     {
-        const LogTag Tag = LogTag.PublisherClient;
+        private const LogTag Tag = LogTag.PublisherClient;
 
-        readonly ProtoSerialiser _serialiser = new ProtoSerialiser();
-        readonly BlockingCollection<ObjectWrap> _q = new BlockingCollection<ObjectWrap>(1000);
-        readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
-        readonly TcpClient _tcpClient;
-        readonly NetworkStream _networkStream;
-        readonly PublisherSubscriptionStore _store;
-        readonly Thread _consumerThread;
-        readonly string _topic;
-        readonly string _endPoint;
-        readonly string _name;
-        readonly string _type;
-		int _messageLoss;
-        long _count;
-        long _beatCount;
-        long _beatCountCheck;
-        readonly Timer _beatTimer;
+        private readonly ProtoSerialiser _serialiser = new ProtoSerialiser();
+        private readonly BlockingCollection<ObjectWrap> _q = new BlockingCollection<ObjectWrap>(1000);
+        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        private readonly TcpClient _tcpClient;
+        private readonly NetworkStream _networkStream;
+        private readonly PublisherSubscriptionStore _store;
+        private readonly Thread _consumerThread;
+        private readonly string _topic;
+        private readonly string _endPoint;
+        private readonly string _name;
+        private readonly string _type;
+        private int _messageLoss;
+        private long _count;
+        private long _beatCount;
+        private long _beatCountCheck;
+        private readonly Timer _beatTimer;
 
-		internal PublisherClient(TcpClient tcpClient, NetworkStream networkStream, Header header, PublisherSubscriptionStore store)
+        internal PublisherClient(TcpClient tcpClient, NetworkStream networkStream, Header header, PublisherSubscriptionStore store)
         {
             _tcpClient = tcpClient;
             _networkStream = networkStream;
             _store = store;
-			_topic = header.Topic;
-			_name = header.Name;
-			_type = header.Type;
-			_endPoint = tcpClient.Client.RemoteEndPoint.ToString();
+            _topic = header.Topic;
+            _name = header.Name;
+            _type = header.Type;
+            _endPoint = tcpClient.Client.RemoteEndPoint.ToString();
 
-            _consumerThread = new Thread(Consumer) { IsBackground = true };
+            _consumerThread = new Thread(Consumer) {IsBackground = true};
             _consumerThread.Start();
 
-		    _beatTimer = new Timer(_ =>
-		    {
-		        long count = Interlocked.CompareExchange(ref _beatCount, 0, 0);
-		        long current = Interlocked.Exchange(ref _beatCountCheck, count);
-		        if (count == current)
-		        {
+            _beatTimer = new Timer(_ =>
+            {
+                long count = Interlocked.CompareExchange(ref _beatCount, 0, 0);
+                long current = Interlocked.Exchange(ref _beatCountCheck, count);
+                if (count == current)
+                {
                     Log.Info(Tag, "Failed heartbeat count from subscriber " + (Name ?? "<null>") + " - closing network stream");
                     _networkStream.Close();
-		        }
-		    }, null, 10*1000, 10*1000);
+                }
+            }, null, 10*1000, 10*1000);
         }
 
-		internal string Topic { get { return _topic; } }
-        internal string EndPoint { get { return _endPoint; } }
-        internal int MessageLoss { get { return Interlocked.CompareExchange(ref _messageLoss, 0, 0); } }
-        internal string Name { get { return _name; } }
-        internal string Type { get { return _type; } }
-        internal int Backlog { get { return _q.Count; } }
-        internal long MessageCount { get { return Interlocked.CompareExchange(ref _count, 0, 0); } }
-        internal long BeatCount { get { return Interlocked.CompareExchange(ref _beatCount, 0, 0); } }
+        internal string Topic
+        {
+            get { return _topic; }
+        }
+
+        internal string EndPoint
+        {
+            get { return _endPoint; }
+        }
+
+        internal int MessageLoss
+        {
+            get { return Interlocked.CompareExchange(ref _messageLoss, 0, 0); }
+        }
+
+        internal string Name
+        {
+            get { return _name; }
+        }
+
+        internal string Type
+        {
+            get { return _type; }
+        }
+
+        internal int Backlog
+        {
+            get { return _q.Count; }
+        }
+
+        internal long MessageCount
+        {
+            get { return Interlocked.CompareExchange(ref _count, 0, 0); }
+        }
+
+        internal long BeatCount
+        {
+            get { return Interlocked.CompareExchange(ref _beatCount, 0, 0); }
+        }
 
         internal void Send(string topic, Type type, object message)
         {
@@ -82,7 +113,7 @@ namespace ProtobufSockets.Internal
                 Log.Debug(Tag, "Send: InvalidOperationException");
             }
         }
-			
+
         internal void Close()
         {
             Log.Debug(Tag, "Closing.");
@@ -90,7 +121,7 @@ namespace ProtobufSockets.Internal
             _consumerThread.Join();
         }
 
-        void InternalClose()
+        private void InternalClose()
         {
             _cancellation.Cancel();
             _store.Remove(_tcpClient.Client);
@@ -98,7 +129,7 @@ namespace ProtobufSockets.Internal
             _tcpClient.Close();
         }
 
-        void Consumer()
+        private void Consumer()
         {
             Log.Info(Tag, "Starting client consumer [" + Thread.CurrentThread.ManagedThreadId + "]");
             CancellationToken token = _cancellation.Token;
@@ -119,7 +150,7 @@ namespace ProtobufSockets.Internal
                         Interlocked.Increment(ref _beatCount);
                         Log.Debug(Tag, "Heartbeat from subscriber " + (Name ?? "<null>"));
 
-                        var beatOut = (Beat)take.Object;
+                        var beatOut = (Beat) take.Object;
                         _serialiser.Serialise(_networkStream, beatOut);
                         var beatIn = _serialiser.Deserialize<Beat>(_networkStream);
                         Log.Debug(Tag, "Heartbeat # " + (Name ?? "<null>") + " - " + beatIn.Number + " - " + beatOut.Number);

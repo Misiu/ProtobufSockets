@@ -14,7 +14,11 @@ namespace ProtobufSockets.Stats
             NumberOfSubscribers = _clients.Count;
         }
 
-        public IEnumerable<PublisherClientStats> Clients { get { return _clients; } }
+        public IEnumerable<PublisherClientStats> Clients
+        {
+            get { return _clients; }
+        }
+
         public int NumberOfSubscribers { get; private set; }
         public SystemStats SystemStats { get; private set; }
     }

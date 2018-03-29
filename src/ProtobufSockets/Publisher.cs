@@ -9,19 +9,26 @@ using ProtobufSockets.Stats;
 
 namespace ProtobufSockets
 {
+    /// <summary>
+    /// Publisher
+    /// </summary>
     public class Publisher : IDisposable
     {
-        const LogTag Tag = LogTag.Publisher;
+        private const LogTag Tag = LogTag.Publisher;
 
-        readonly TcpListener _listener;
-        readonly PublisherSubscriptionStore _store;
-        readonly ProtoSerialiser _serialiser = new ProtoSerialiser();
-        readonly Timer _beatTimer;
+        private readonly TcpListener _listener;
+        private readonly PublisherSubscriptionStore _store;
+        private readonly ProtoSerialiser _serialiser = new ProtoSerialiser();
+        private readonly Timer _beatTimer;
 
         public Publisher() : this(new IPEndPoint(IPAddress.Loopback, 0))
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the ProtobufSockets.Publisher class with the specified local endpoint address.
+        /// </summary>
+        /// <param name="ipEndPoint">local endpoint address</param>
         public Publisher(IPEndPoint ipEndPoint)
         {
             _listener = new TcpListener(ipEndPoint);
@@ -34,22 +41,33 @@ namespace ProtobufSockets
             // disconnected subscribers. This becomes helpfull if
             // there is no payload being sent. Otherwise subscribers
             // failing over will stack up and fill the memory.
-            _beatTimer = new Timer(_ => Publish(new Beat{Number = new Random().Next(0, 1000000000)}), null, 10 * 1000, 5 * 1000);
+            _beatTimer = new Timer(_ => Publish(new Beat {Number = new Random().Next(0, 1000000000)}), null, 10*1000, 5*1000);
         }
 
+        /// <summary>
+        /// Gets the local endpoint.
+        /// </summary>
         public IPEndPoint EndPoint
         {
-            get
-            {
-                return (IPEndPoint)_listener.Server.LocalEndPoint;
-            }
+            get { return (IPEndPoint) _listener.Server.LocalEndPoint; }
         }
 
+        /// <summary>
+        /// Publishes message to all topics.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="message">Message</param>
         public void Publish<T>(T message)
         {
             Publish(null, message);
         }
 
+        /// <summary>
+        /// Publishes message to specific topic.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="topic">Topic name</param>
+        /// <param name="message">Message</param>
         public void Publish<T>(string topic, T message)
         {
             if (topic != null)
@@ -61,7 +79,7 @@ namespace ProtobufSockets
 
                 if (!Topic.Match(client.Topic, topic)) continue;
 
-                client.Send(topic, typeof(T), message);
+                client.Send(topic, typeof (T), message);
             }
         }
 
@@ -94,14 +112,14 @@ namespace ProtobufSockets
 
             foreach (var client in _store.Subscriptions)
             {
-                Log.Debug(Tag, "Closing client " + (client.Name ?? "<null>") +" ["+ (client.EndPoint ?? "<null>") + "]");
+                Log.Debug(Tag, "Closing client " + (client.Name ?? "<null>") + " [" + (client.EndPoint ?? "<null>") + "]");
                 client.Close();
             }
 
             _listener.Stop();
         }
 
-        void ClientAccept(IAsyncResult ar)
+        private void ClientAccept(IAsyncResult ar)
         {
             Log.Debug(Tag, "Accepting client connections.");
 
@@ -140,7 +158,7 @@ namespace ProtobufSockets
                 Log.Info(Tag, "Client connected with topic " + (header.Topic ?? "<null>") + " and name " + (header.Name ?? "<null>"));
 
                 var client = new PublisherClient(tcpClient, networkStream, header, _store);
-                
+
                 _store.Add(socket, client);
 
                 // send ack

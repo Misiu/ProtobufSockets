@@ -2,11 +2,11 @@
 
 namespace ProtobufSockets.Stats
 {
-    class SystemStatsBuilder
+    internal class SystemStatsBuilder
     {
-        int _threads;
-        long _private;
-        long _virtual;
+        private int _threads;
+        private long _private;
+        private long _virtual;
 
         internal SystemStats Build()
         {

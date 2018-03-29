@@ -5,11 +5,11 @@ using ProtoBuf.Meta;
 
 namespace ProtobufSockets.Internal
 {
-    class ProtoSerialiser
+    internal class ProtoSerialiser
     {
-        const LogTag Tag = LogTag.SubscriberClient;
+        private const LogTag Tag = LogTag.SubscriberClient;
 
-        readonly RuntimeTypeModel _model = RuntimeTypeModel.Default;
+        private readonly RuntimeTypeModel _model = RuntimeTypeModel.Default;
 
         internal T Deserialize<T>(Stream stream) where T : class
         {
@@ -53,7 +53,7 @@ namespace ProtobufSockets.Internal
             Wrapped(() => _model.SerializeWithLengthPrefix(stream, obj, type, PrefixStyle.Base128, 0));
         }
 
-        static void Wrapped(Action action)
+        private static void Wrapped(Action action)
         {
             try
             {
